@@ -164,6 +164,9 @@ packages=(
     libseccomp2
     libltdl7
 
+    # install cloud-init
+    cloud-init
+
     # required to install docker-compose
     python-pip
     python-setuptools
@@ -191,11 +194,20 @@ curl -sSL "https://raw.githubusercontent.com/docker/compose/${DOCKER_COMPOSE_VER
 curl -L "https://github.com/docker/machine/releases/download/v${DOCKER_MACHINE_VERSION}/docker-machine-$(uname -s)-$(uname -m)" > /usr/local/bin/docker-machine
 chmod +x /usr/local/bin/docker-machine
 
+# link cloud-init related files
+mkdir -p /var/lib/cloud/seed/nocloud-net
+ln -s /boot/user-data /var/lib/cloud/seed/nocloud-net/user-data
+ln -s /boot/meta-data /var/lib/cloud/seed/nocloud-net/meta-data
+
 # install linux kernel for Odroid C2
 apt-get -y install \
     --no-install-recommends \
     u-boot-tools \
     "linux-image-${KERNEL_VERSION}"
+
+# remove sudoers files
+#rm -f etc/sudoers.d/010_pi-nopasswd
+rm -f etc/sudoers.d/user-pirate
 
 # Restore os-release additions
 cat /tmp/os-release.add >> /etc/os-release
