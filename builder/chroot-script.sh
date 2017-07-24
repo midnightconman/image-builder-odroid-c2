@@ -142,7 +142,18 @@ DOCKER_KEY_ID=0EBFCD88
 get_gpg $DOCKER_KEY_ID
 echo "deb https://download.docker.com/linux/debian stretch stable" > /etc/apt/sources.list.d/docker.list
 
-# update apt after adding repositories
+# set up hypriot schatzkiste repository for generic packages
+echo 'deb https://packagecloud.io/Hypriot/Schatzkiste/debian/ jessie main' >> /etc/apt/sources.list.d/hypriot.list
+
+# add armhf as additional architecure (see below)
+dpkg --add-architecture armhf
+
+# Add kubernetes keys and apt-get list
+curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+echo "deb http://apt.kubernetes.io/ kubernetes-xenial main" > /etc/apt/sources.list.d/kubernetes.list
+
+# update all apt repository lists
+export DEBIAN_FRONTEND=noninteractive
 apt-get update
 
 # packages needed for the rest of the system
@@ -167,6 +178,12 @@ packages=(
     # install cloud-init
     cloud-init
 
+    # install network time
+    ntp
+
+    # install all the kubernetes
+    kubeadm
+
     # required to install docker-compose
     python-pip
     python-setuptools
@@ -186,13 +203,18 @@ ln -s /boot/meta-data /var/lib/cloud/seed/nocloud-net/meta-data
 apt-get -y install docker-ce="${DOCKER_CE_VERSION}"
 curl -sSL https://raw.githubusercontent.com/docker/docker-ce/master/components/cli/contrib/completion/bash/docker -o /etc/bash_completion.d/docker
 
+# install kubernetes approved docker version
+K8S_DOCKER=$(mktemp)
+curl -Lo "$K8S_DOCKER" "$K8S_DOCKER_URL"
+echo "${K8S_DOCKER_CHECKSUM} ${K8S_DOCKER}" | sha256sum -c -
+tar xzvf $K8S_DOCKER -C /usr/bin/ --no-same-owner
+
 # install docker-compose
 pip install docker-compose=="${DOCKER_COMPOSE_VERSION}"
 curl -sSL "https://raw.githubusercontent.com/docker/compose/${DOCKER_COMPOSE_VERSION}/contrib/completion/bash/docker-compose" -o /etc/bash_completion.d/docker-compose
 
-# install docker-machine
-curl -L "https://github.com/docker/machine/releases/download/v${DOCKER_MACHINE_VERSION}/docker-machine-$(uname -s)-$(uname -m)" > /usr/local/bin/docker-machine
-chmod +x /usr/local/bin/docker-machine
+# Delete default user sudo
+rm -f etc/sudoers.d/user-pirate
 
 # link cloud-init related files
 mkdir -p /var/lib/cloud/seed/nocloud-net
@@ -204,10 +226,6 @@ apt-get -y install \
     --no-install-recommends \
     u-boot-tools \
     "linux-image-${KERNEL_VERSION}"
-
-# remove sudoers files
-#rm -f etc/sudoers.d/010_pi-nopasswd
-rm -f etc/sudoers.d/user-pirate
 
 # Restore os-release additions
 cat /tmp/os-release.add >> /etc/os-release
