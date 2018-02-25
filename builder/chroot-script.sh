@@ -204,12 +204,12 @@ apt-get -y install docker-ce="${DOCKER_CE_VERSION}"
 curl -sSL https://raw.githubusercontent.com/docker/docker-ce/master/components/cli/contrib/completion/bash/docker -o /etc/bash_completion.d/docker
 
 # downgrade to kubernetes approved docker version
-apt-get -y install --no-install-recommends libdevmapper1.02.1
-ln -s /lib/aarch64-linux-gnu/libdevmapper.so.1.02.1 /lib/aarch64-linux-gnu/libdevmapper.so.1.02
-K8S_DOCKER=$(mktemp)
-curl -Lo "$K8S_DOCKER" "$K8S_DOCKER_URL"
-echo "${K8S_DOCKER_CHECKSUM} ${K8S_DOCKER}" | sha256sum -c -
-tar xzvf $K8S_DOCKER -C /usr/bin/ --no-same-owner
+#apt-get -y install --no-install-recommends libdevmapper1.02.1
+#ln -s /lib/aarch64-linux-gnu/libdevmapper.so.1.02.1 /lib/aarch64-linux-gnu/libdevmapper.so.1.02
+#K8S_DOCKER=$(mktemp)
+#curl -Lo "$K8S_DOCKER" "$K8S_DOCKER_URL"
+#echo "${K8S_DOCKER_CHECKSUM} ${K8S_DOCKER}" | sha256sum -c -
+#tar xzvf $K8S_DOCKER -C /usr/bin/ --no-same-owner
 
 # install docker-compose
 pip install docker-compose=="${DOCKER_COMPOSE_VERSION}"
